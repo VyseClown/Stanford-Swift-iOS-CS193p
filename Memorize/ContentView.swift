@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  Memorize
 //
-//  Created by H Hugo Falkman on 29/05/2021.
+//  Created by Alessandro Gentil on 10/06/2021.
 //
 
 import SwiftUI
@@ -13,6 +13,7 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
+            Text("Memorize!").font(.largeTitle)
             ScrollView {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 65))]) {
                     ForEach(emojis[0..<emojiCount], id:\.self) { emoji in
