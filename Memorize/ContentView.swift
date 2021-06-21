@@ -8,73 +8,65 @@
 import SwiftUI
 
 struct ContentView: View {
-    var emojis = ["🚲", "🚂", "🚁", "🚜", "🚕", "🏎", "🚑", "🚓", "🚒", "✈️", "🚀", "⛵️", "🛸", "🛶", "🚌", "🏍", "🛺", "🚠", "🛵", "🚗", "🚚", "🚇", "🛻", "🚝"]
-    @State var emojiCount = 4
+    @ObservedObject var viewModel: EmojiMemoryGame = EmojiMemoryGame()
     
     var body: some View {
-        VStack {
-            Text("Memorize!").font(.largeTitle)
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 65))]) {
-                    ForEach(emojis[0..<emojiCount], id:\.self) { emoji in
-                        CardView(content: emoji)
-                            .aspectRatio(2/3, contentMode: .fit)
-                    }
+        ScrollView {
+            Text("\(viewModel.themeName)").font(.largeTitle)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 65))]) {
+                ForEach(viewModel.cards) { card in
+                    CardView(card: card, themeColor: viewModel.themeColor, useGradient: viewModel.useGradient)
+                        .aspectRatio(2/3, contentMode: .fit)
+                        .onTapGesture {
+                            viewModel.choose(card)
+                        }
+                        //.foregroundColor(viewModel.themeColor)
                 }
             }
-            .foregroundColor(.red)
             Spacer()
-            HStack {
-                remove
-                Spacer()
-                add
-            }
-            .font(.largeTitle)
-            .padding(.horizontal)
+            Text("Score: \(viewModel.scoreOfTheGame)").font(.title).padding()
+            Spacer()
+            
+            Button(action: {viewModel.resetGame()}, label: {
+                Text("New Game")
+            }).padding()
+            
         }
         .padding(.horizontal)
-    }
-    
-    var remove: some View {
-        Button {
-            if emojiCount > 1 {
-                emojiCount -= 1
-            }
-        } label: {
-            Image(systemName: "minus.circle")
-        }
-    }
-    
-    var add: some View {
-        Button {
-            if emojiCount < emojis.count {
-                emojiCount += 1
-            }
-        } label: {
-            Image(systemName: "plus.circle")
-        }
+        
+        
     }
 }
 
+
 struct CardView: View {
-    var content: String
-    @State var isFaceUp: Bool = true
+    let card: MemoryGame<String>.Card
+    let themeColor: Color
+    let useGradient: Bool
     
     var body: some View {
         ZStack {
-            let shape = RoundedRectangle(cornerRadius: /*@START_MENU_TOKEN@*/20.0/*@END_MENU_TOKEN@*/)
-            if isFaceUp {
+            let shape = RoundedRectangle(cornerRadius: 20)
+            if card.isFaceUp {
                 shape.fill().foregroundColor(.white)
-                shape.strokeBorder(lineWidth: 3)
-                Text(content).font(.largeTitle)
+                shape.strokeBorder(lineWidth: 3).foregroundColor(themeColor)
+                Text(card.content).font(.largeTitle)
+            } else if card.isMatched {
+                shape.opacity(0)
             } else {
-                shape.fill()
+                if useGradient {
+                    shape.fill(LinearGradient(gradient: Gradient(colors: [themeColor, Color.pink]), startPoint: .top, endPoint: .bottom))
+                } else {
+                    shape.fill(themeColor)
+                }
+                
             }
-        }
-        .onTapGesture {
-            isFaceUp = !isFaceUp
-        }
+            
+        } //function that is an argument to ZStack (content: ), ViewBuilder
+        
     }
+    
+    
 }
 
 
@@ -91,11 +83,16 @@ struct CardView: View {
 
 
 
+
+
+// "Glue" for Preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
-            .preferredColorScheme(.dark)
-        ContentView()
+        let game = EmojiMemoryGame()
+        
+        ContentView(viewModel: game)
             .preferredColorScheme(.light)
+        ContentView(viewModel: game)
+            .preferredColorScheme(.dark)
     }
 }
